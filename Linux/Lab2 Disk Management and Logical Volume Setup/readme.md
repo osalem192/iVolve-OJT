@@ -14,7 +14,7 @@ This documentation outlines the setup of a 6 GB virtual disk in a Linux environm
 ### 1. Disk Attachment Verfication
 A new 6 GB disk (`/dev/sdb`) was attached to the virtual machine.
 
-![alt text](images/1_lsblk.png)
+![alt text](Images/1_lsblk.png)
 
 
 ### 2. Create partitions
@@ -35,13 +35,13 @@ Inside fdisk:
 
 #### Output
 
-![alt text](images/2_fdisk.png)
+![alt text](Images/2_fdisk.png)
 
 #### Two partitions were created using fdisk:
 - `/dev/sdb1`: 2 GB
 - `/dev/sdb2`: 3 GB
 
-![alt text](images/4_lsblk.png)
+![alt text](Images/4_lsblk.png)
 
 
 ### 3. Initialize Volume Group and Create Logical Volume
@@ -64,7 +64,7 @@ sudo mkfs.ext4 /dev/vg_lab2/lv_lab2
 ```
 #### Output
 
-![alt text](images/6_vg_lg_mkfs.png)
+![alt text](Images/6_vg_lg_mkfs.png)
 
 
 Created a mount point and mounted the Logical Volume:
@@ -82,7 +82,7 @@ lsblk /dev/sdb
 
 #### Output:
 
-![alt text](images/7_mounting.png)
+![alt text](Images/7_mounting.png)
 
 
 
@@ -112,7 +112,7 @@ sudo resize2fs /dev/vg_lab2/lv_lab2
 ```
 #### Output
 
-![alt text](images/8_Creating_and_Extending.png) 
+![alt text](Images/8_Creating_and_Extending.png) 
 
 
 ## Final Result
@@ -120,7 +120,7 @@ sudo resize2fs /dev/vg_lab2/lv_lab2
   df -hT
   ```
 
-![alt text](images/9_Final_result.png)
+![alt text](Images/9_Final_result.png)
 
 ## Conclusion
 The Logical Volume `lv_lab2` was successfully created with an initial size of 2 GB and extended to 4.9 GB by adding the 3 GB partition. The filesystem was resized online, and the volume is now mounted at `/mnt/lv_lab2`.
