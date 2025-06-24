@@ -82,7 +82,7 @@ lsblk /dev/sdb
 
 #### Output:
 
-![alt text](Images/7_mounting.png)
+![alt text](Images/7_Mounting.png)
 
 
 
