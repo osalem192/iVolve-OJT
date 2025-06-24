@@ -120,7 +120,7 @@ sudo resize2fs /dev/vg_lab2/lv_lab2
   df -hT
   ```
 
-![alt text](Images/9_Final_result.png)
+![alt text](Images/9_FInal_result.png)
 
 ## Conclusion
 The Logical Volume `lv_lab2` was successfully created with an initial size of 2 GB and extended to 4.9 GB by adding the 3 GB partition. The filesystem was resized online, and the volume is now mounted at `/mnt/lv_lab2`.
