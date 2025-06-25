@@ -1,0 +1,2 @@
+[web]
+ivolve ansible_host=192.168.79.134 ansible_user=root
