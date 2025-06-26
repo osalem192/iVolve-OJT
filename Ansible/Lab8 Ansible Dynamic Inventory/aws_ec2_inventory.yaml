@@ -1,0 +1,6 @@
+plugin: aws_ec2
+regions:
+  - us-east-1                # Replace with your region
+filters:
+  tag:Name: ivolve           # Match EC2s with tag Name=ivolve
+host_key_checks: False

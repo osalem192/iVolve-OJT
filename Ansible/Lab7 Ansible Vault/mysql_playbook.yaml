@@ -1,0 +1,64 @@
+---
+- name: Automate MySQL Installation and iVovle DB Setup
+  hosts: web
+  become: yes
+  vars_files:
+    - vars.yml
+    - vault.yml
+
+  tasks:
+    - name: Update apt cache (for Debian/Ubuntu)
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Install MySQL Server
+      ansible.builtin.package:
+        name: mysql-server
+        state: present
+
+    - name: Install PyMySQL for Ansible MySQL modules
+      ansible.builtin.apt:
+        name: python3-pymysql
+        state: present
+        
+    - name: Start and enable MySQL service
+      ansible.builtin.service:
+        name: mysql
+        state: started
+        enabled: yes
+
+    - name: Set MySQL root password (if not already set)
+      community.mysql.mysql_user:
+        name: root
+        host: localhost
+        password: "{{ mysql_root_password }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock # Use socket for initial root login
+        state: present
+        check_implicit_admin: yes # Ensure root user exists
+
+    - name: Create iVovle database
+      community.mysql.mysql_db:
+        name: "{{ mysql_db_name }}"
+        state: present
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+
+    - name: Create database user with all privileges on iVovle DB
+      community.mysql.mysql_user:
+        name: "{{ mysql_db_user }}"
+        password: "{{ mysql_db_password }}" # This comes from vault.yml
+        priv: "{{ mysql_db_name }}.*:ALL" # Grant all privileges on the iVovle database
+        host: "%" # Allow connection from any host (consider restricting in production)
+        state: present
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+
+    - name: Flush privileges
+      community.mysql.mysql_query:
+        query: FLUSH PRIVILEGES;
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+
+    - name: Inform user about successful setup
+      ansible.builtin.debug:
+        msg: "MySQL, iVovle database, and user '{{ mysql_db_user }}' created successfully!"

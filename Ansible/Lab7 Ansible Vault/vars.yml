@@ -1,0 +1,4 @@
+# vars.yml
+mysql_db_name: "iVovle"
+mysql_db_user: "osalem"
+# mysql_db_password and mysql_root_password will come from the vault
