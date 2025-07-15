@@ -1,0 +1,91 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = 'osalem192/jenkinsapp'
+        IMAGE_TAG = "v${env.BUILD_ID}"
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: 'https://github.com/osalem192/Jenkins_App.git'
+            }
+        }
+
+        stage('Run Unit Tests') {
+            steps {
+                withMaven(maven: 'Maven') {
+                    echo "Running unit tests..."
+                    sh "mvn test"
+                }
+            }
+        }
+
+        stage('Build App') {
+            steps {
+                withMaven(maven: 'Maven') {
+                    echo "Building app..."
+                    sh "mvn package"
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    echo "Building docker image..."
+                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker_credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    script {
+                        sh "echo $PASSWORD | docker login -u $USERNAME --password-stdin"
+                        sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                    }
+                }
+            }
+        }
+
+        stage('Delete Local Docker Image') {
+            steps {
+                sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG}"
+            }
+        }
+
+        stage('Update Deployment YAML') {
+            steps {
+                script {
+                    sh "sed -i 's|image:.*|image: ${IMAGE_NAME}:${IMAGE_TAG}|' deployment.yaml"
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG_FILE')]) {
+                    sh '''
+                    export KUBECONFIG=$KUBECONFIG_FILE
+                    kubectl apply -f deployment.yaml
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline completed (regardless of result)."
+        }
+        success {
+            echo "Pipeline completed successfully."
+        }
+        failure {
+            echo "Pipeline failed."
+        }
+    }
+}
