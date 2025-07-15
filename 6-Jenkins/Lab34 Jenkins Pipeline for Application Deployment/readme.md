@@ -23,6 +23,28 @@ The pipeline consists of the following stages:
 
 ## Stage Details
 
+### 1. Running Jenkins as Container
+
+```sh
+docker run --privileged --network=host -p 8080:8080 -p 50000:50000 -v ~/Desktop/jenkins_data:/var/jenkins_home -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker --name jenkins_container jenkins/jenkins:jdk21
+```
+#### After that to use docker inside jenkins container:
+```sh
+docker exec -it -u root jenkins
+```
+then inside the container
+```sh
+groupadd -g 999 docker
+usermod -aG docker jenkins
+```
+and to use kubectl inside jenkins container:
+```sh
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+
+install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+```
+
+
 ### 1. Clone Repository
 - **Description:** Clones the source code from the GitHub repository (`main` branch).
 - **Jenkinsfile:**
