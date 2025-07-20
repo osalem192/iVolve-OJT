@@ -1,0 +1,95 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = 'osalem192/argocdapp'
+        IMAGE_TAG = "v${env.BUILD_ID}"
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: 'https://github.com/osalem192/Jenkins_App.git'
+            }
+        }
+
+        stage('Run Unit Tests') {
+            steps {
+                withMaven(maven: 'Maven') {
+                    echo "Running unit tests..."
+                    sh "mvn test"
+                }
+            }
+        }
+
+        stage('Build App') {
+            steps {
+                withMaven(maven: 'Maven') {
+                    echo "Building app..."
+                    sh "mvn package"
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    echo "Building docker image..."
+                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker_credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    script {
+                        sh "echo $PASSWORD | docker login -u $USERNAME --password-stdin"
+                        sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                    }
+                }
+            }
+        }
+
+        stage('Delete Local Docker Image') {
+            steps {
+                sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG}"
+            }
+        }
+
+        stage('Update Deployment YAML') {
+            steps {
+                script {
+                    sh "sed -i 's|image:.*|image: ${IMAGE_NAME}:${IMAGE_TAG}|' deployment.yaml"
+                }
+            }
+        }
+
+        stage('Push to GitHub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'GitHub_Credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    script {
+                        sh "git config --global user.name 'Jenkins'"
+                        sh "git config --global user.email 'osalem192@gmail.com'"
+                        sh "git add deployment.yaml"
+                        sh "git remote set-url origin 'https://github.com/osalem192/Jenkins_App.git'"
+                        sh "git commit -m 'Jenkins build:${IMAGE_TAG}'"
+                        sh "git push https://${USERNAME}:${PASSWORD}@github.com/osalem192/Jenkins_App.git main"
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline completed (regardless of result)."
+        }
+        success {
+            echo "Pipeline completed successfully."
+        }
+        failure {
+            echo "Pipeline failed."
+        }
+    }
+}
